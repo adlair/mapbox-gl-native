@@ -80,13 +80,14 @@ void GeometryTile::setError(std::exception_ptr err) {
     observer->onTileError(*this, err);
 }
 
-void GeometryTile::setData(std::unique_ptr<const GeometryTileData> data_) {
+uint64_t GeometryTile::setData(std::unique_ptr<const GeometryTileData> data_) {
     // Mark the tile as pending again if it was complete before to prevent signaling a complete
     // state despite pending parse operations.
     pending = true;
 
     ++correlationID;
     worker.invoke(&GeometryTileWorker::setData, std::move(data_), correlationID);
+    return correlationID;
 }
 
 

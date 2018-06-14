@@ -4,6 +4,7 @@
 #include <mbgl/storage/file_source.hpp>
 #include <mbgl/renderer/tile_parameters.hpp>
 #include <mbgl/util/tileset.hpp>
+#include <mbgl/util/logging.hpp>
 
 #include <cassert>
 
@@ -106,7 +107,11 @@ void TileLoader<T>::loadedData(const Response& res) {
         resource.priorExpires = res.expires;
         resource.priorEtag = res.etag;
         tile.setMetadata(res.modified, res.expires);
-        tile.setData(res.noContent ? nullptr : res.data);
+        uint64_t correlationID = tile.setData(res.noContent ? nullptr : res.data);
+        Log::Debug(Event::ParseTile,
+                   "CorrelationID:%lld, URL:%s",
+                   correlationID, res.url->c_str()
+                   );
     }
 }
 

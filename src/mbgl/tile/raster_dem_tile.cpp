@@ -45,10 +45,11 @@ void RasterDEMTile::setMetadata(optional<Timestamp> modified_, optional<Timestam
     expires = expires_;
 }
 
-void RasterDEMTile::setData(std::shared_ptr<const std::string> data) {
+uint64_t RasterDEMTile::setData(std::shared_ptr<const std::string> data) {
     pending = true;
     ++correlationID;
     worker.invoke(&RasterDEMTileWorker::parse, data, correlationID, encoding);
+    return correlationID;
 }
 
 void RasterDEMTile::onParsed(std::unique_ptr<HillshadeBucket> result, const uint64_t resultCorrelationID) {

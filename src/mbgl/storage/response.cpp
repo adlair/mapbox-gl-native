@@ -19,6 +19,7 @@ Response& Response::operator=(const Response& res) {
     modified = res.modified;
     expires = res.expires;
     etag = res.etag;
+    url = res.url;
     return *this;
 }
 

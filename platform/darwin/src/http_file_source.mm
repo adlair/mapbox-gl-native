@@ -5,6 +5,7 @@
 #include <mbgl/util/http_header.hpp>
 #include <mbgl/util/async_task.hpp>
 #include <mbgl/util/version.hpp>
+#include <mbgl/util/logging.hpp>
 
 #import <Foundation/Foundation.h>
 
@@ -199,6 +200,10 @@ uint32_t HTTPFileSource::maximumConcurrentRequests() {
 std::unique_ptr<AsyncRequest> HTTPFileSource::request(const Resource& resource, Callback callback) {
     auto request = std::make_unique<HTTPRequest>(callback);
     auto shared = request->shared; // Explicit copy so that it also gets copied into the completion handler block below.
+#ifndef NDEBUG
+    using namespace std::chrono;
+    milliseconds requestStartedAt = duration_cast< milliseconds >(system_clock::now().time_since_epoch());
+#endif
 
     @autoreleasepool {
         NSURL* url = [NSURL URLWithString:@(resource.url.c_str())];
@@ -226,8 +231,22 @@ std::unique_ptr<AsyncRequest> HTTPFileSource::request(const Resource& resource, 
                 if (error && [error code] == NSURLErrorCancelled) {
                     return;
                 }
-
+#ifndef NDEBUG
+                milliseconds requestEnededAt = duration_cast< milliseconds >(system_clock::now().time_since_epoch());
+                static std::string EnumKindStrings[] = {
+                    "Unknown", "Style", "Source", "Tile","Glyphs", "SpriteImage", "SpriteJSON", "Image"
+                };
+                Log::Debug(Event::HttpRequest,
+                           "Resource:%s, Type:%s, Requesting time:%llims, Size:%u",
+                           [url.absoluteString UTF8String],
+                           (int)resource.kind >= (int)(sizeof(EnumKindStrings)/sizeof(EnumKindStrings[0])) ?
+                           "Unknown": EnumKindStrings[(int)resource.kind].c_str(),
+                           requestEnededAt - requestStartedAt,
+                           data.length
+                           );
+#endif
                 Response response;
+                response.url = resource.url;
                 using Error = Response::Error;
 
                 if (error) {

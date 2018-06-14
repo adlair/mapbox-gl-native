@@ -31,7 +31,7 @@ public:
     ~GeometryTile() override;
 
     void setError(std::exception_ptr);
-    void setData(std::unique_ptr<const GeometryTileData>);
+    uint64_t setData(std::unique_ptr<const GeometryTileData>);
 
     void setLayers(const std::vector<Immutable<style::Layer::Impl>>&) override;
     void setShowCollisionBoxes(const bool showCollisionBoxes) override;

@@ -34,10 +34,11 @@ void RasterTile::setMetadata(optional<Timestamp> modified_, optional<Timestamp> 
     expires = expires_;
 }
 
-void RasterTile::setData(std::shared_ptr<const std::string> data) {
+uint64_t RasterTile::setData(std::shared_ptr<const std::string> data) {
     pending = true;
     ++correlationID;
     worker.invoke(&RasterTileWorker::parse, data, correlationID);
+    return correlationID;
 }
 
 void RasterTile::onParsed(std::unique_ptr<RasterBucket> result, const uint64_t resultCorrelationID) {

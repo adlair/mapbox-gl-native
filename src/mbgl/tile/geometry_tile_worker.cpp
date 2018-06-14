@@ -14,6 +14,7 @@
 #include <mbgl/util/exception.hpp>
 
 #include <unordered_set>
+#include <chrono>
 
 namespace mbgl {
 
@@ -318,6 +319,10 @@ void GeometryTileWorker::parse() {
     if (!data || !layers) {
         return;
     }
+#ifndef NDEBUG
+    using namespace std::chrono;
+    milliseconds parseStartedAt = duration_cast< milliseconds >(system_clock::now().time_since_epoch());
+#endif
 
     std::vector<std::string> symbolOrder;
     for (auto it = layers->rbegin(); it != layers->rend(); it++) {
@@ -399,6 +404,13 @@ void GeometryTileWorker::parse() {
             symbolLayouts.push_back(std::move(it->second));
         }
     }
+#ifndef NDEBUG
+    milliseconds parseEnededAt = duration_cast< milliseconds >(system_clock::now().time_since_epoch());
+    Log::Debug(Event::ParseTile,
+               "CorrelationID:%lld, Parsing time:%llims",
+               correlationID,
+               parseEnededAt - parseStartedAt);
+#endif
 
     requestNewGlyphs(glyphDependencies);
     requestNewImages(imageDependencies);
